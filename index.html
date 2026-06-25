@@ -23,24 +23,68 @@
         --danger-soft: #fff0ed;
         --success: #1f7a4c;
         --shadow: 0 18px 50px rgba(31, 55, 92, 0.09);
+        --page-gradient-start: rgba(230, 237, 247, 0.95);
+        --page-gradient-end: rgba(246, 248, 251, 0);
+        --chip-ink: #0f3f93;
+        --input-focus-bg: #ffffff;
+        --table-head-bg: #eef4fb;
+        --table-head-ink: #344258;
+        --cell-ink: #26334a;
+        --icon-bg: #edf5ff;
+        --airport-info-bg: #fbfdff;
+        --compass-border: #b8c6d9;
+        --compass-bg: linear-gradient(#fff, #fff) padding-box, conic-gradient(from -10deg, #f0f5fb, #dbe8f5, #f0f5fb) border-box;
+        --compass-ink: #40506a;
+      }
+      :root[data-theme="dark"] {
+        color-scheme: dark;
+        color: #e7edf8;
+        background: #101722;
+        --bg: #101722;
+        --surface: #172131;
+        --surface-strong: #111a27;
+        --ink: #e7edf8;
+        --muted: #a3afc2;
+        --border: #2b3a50;
+        --accent: #6aa4ff;
+        --amber: #f2b84b;
+        --amber-soft: rgba(242, 184, 75, 0.14);
+        --danger: #ff8a7c;
+        --danger-soft: rgba(180, 35, 24, 0.18);
+        --success: #71d49c;
+        --shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+        --page-gradient-start: rgba(32, 47, 70, 0.92);
+        --page-gradient-end: rgba(16, 23, 34, 0);
+        --chip-ink: #c7dcff;
+        --input-focus-bg: #101827;
+        --table-head-bg: #202d40;
+        --table-head-ink: #d5e1f1;
+        --cell-ink: #d7dfec;
+        --icon-bg: #203653;
+        --airport-info-bg: #121c2a;
+        --compass-border: #50647f;
+        --compass-bg: linear-gradient(#152132, #152132) padding-box, conic-gradient(from -10deg, #26384f, #172539, #26384f) border-box;
+        --compass-ink: #cad7e8;
       }
       * { box-sizing: border-box; }
       body {
         margin: 0;
         min-width: 320px;
         min-height: 100vh;
-        background: linear-gradient(180deg, rgba(230, 237, 247, 0.95), rgba(246, 248, 251, 0) 420px), var(--bg);
+        background: linear-gradient(180deg, var(--page-gradient-start), var(--page-gradient-end) 420px), var(--bg);
       }
       button, input, textarea { font: inherit; }
       .app-shell { width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: 34px 0 56px; }
       .topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 26px; }
       h1 { margin: 0; font-size: clamp(2rem, 4vw, 4.5rem); line-height: 0.98; letter-spacing: 0; color: var(--ink); }
       .topbar p { max-width: 660px; margin: 14px 0 0; color: var(--muted); font-size: 1.03rem; }
-      .timezone-chip {
-        flex: 0 0 auto; border: 1px solid var(--border); border-radius: 8px; background: var(--surface);
-        color: #0f3f93; padding: 10px 12px; font-size: 0.88rem; font-weight: 700;
-        box-shadow: 0 6px 18px rgba(31, 55, 92, 0.06);
+      .topbar-actions { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+      .timezone-chip, .theme-toggle {
+        border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--chip-ink);
+        padding: 10px 12px; font-size: 0.88rem; font-weight: 700; box-shadow: 0 6px 18px rgba(31, 55, 92, 0.06);
       }
+      .theme-toggle { cursor: pointer; display: inline-flex; align-items: center; gap: 8px; min-height: 40px; }
+      .theme-toggle:hover { border-color: var(--accent); }
       .workspace {
         background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
         box-shadow: var(--shadow); padding: 22px;
@@ -59,7 +103,7 @@
         display: block; margin-top: 8px; min-height: 118px; resize: vertical; padding: 15px;
         font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; font-size: 0.98rem; line-height: 1.55;
       }
-      input:focus, textarea:focus { border-color: rgba(31, 111, 235, 0.7); box-shadow: 0 0 0 4px rgba(31, 111, 235, 0.12); background: #fff; }
+      input:focus, textarea:focus { border-color: rgba(31, 111, 235, 0.7); box-shadow: 0 0 0 4px rgba(31, 111, 235, 0.12); background: var(--input-focus-bg); }
       .primary-button {
         border: 0; border-radius: 8px; min-height: 46px; padding: 0 18px; display: inline-flex; align-items: center;
         justify-content: center; gap: 9px; background: var(--accent); color: #fff; font-size: 0.94rem; font-weight: 800;
@@ -73,14 +117,14 @@
       .status-line.error { color: var(--danger); }
       .summary-strip {
         margin-top: 18px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-        border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: #fff;
+        border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface);
       }
       .summary-strip div { display: grid; gap: 2px; padding: 13px 15px; border-right: 1px solid var(--border); }
       .summary-strip div:last-child { border-right: 0; }
       .summary-strip strong { color: var(--ink); font-size: 1rem; }
       .summary-strip span { color: var(--muted); font-size: 0.82rem; font-weight: 700; text-transform: uppercase; }
       .airport-info {
-        margin-top: 14px; border: 1px solid var(--border); border-radius: 8px; background: #fbfdff;
+        margin-top: 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--airport-info-bg);
         padding: 14px 15px; display: none; gap: 12px;
       }
       .airport-info.visible { display: grid; }
@@ -98,15 +142,15 @@
       }
       .table-frame { overflow: hidden; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); box-shadow: var(--shadow); }
       table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-      th { background: #eef4fb; color: #344258; padding: 13px 15px; text-align: left; font-size: 0.78rem; text-transform: uppercase; }
+      th { background: var(--table-head-bg); color: var(--table-head-ink); padding: 13px 15px; text-align: left; font-size: 0.78rem; text-transform: uppercase; }
       th:first-child { width: 25%; }
       th:nth-child(2) { width: 34%; }
-      td { padding: 15px; border-top: 1px solid var(--border); color: #26334a; vertical-align: top; }
+      td { padding: 15px; border-top: 1px solid var(--border); color: var(--cell-ink); vertical-align: top; }
       .warning-row td { background: var(--danger-soft); }
       .token-cell { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: start; }
       .category-icon {
         width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px;
-        background: #edf5ff; color: var(--accent); font-size: 1.05rem;
+        background: var(--icon-bg); color: var(--accent); font-size: 1.05rem;
       }
       code { display: block; color: var(--ink); font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; font-size: 0.96rem; font-weight: 800; overflow-wrap: anywhere; }
       .token-cell span:last-child { display: block; margin-top: 2px; color: var(--muted); font-size: 0.82rem; font-weight: 700; }
@@ -114,9 +158,9 @@
       .pedagogy-cell p { margin: 0; }
       .mini-compass { flex: 0 0 auto; width: 86px; display: grid; gap: 5px; justify-items: center; }
       .compass-face {
-        --direction: 0deg; position: relative; width: 66px; height: 66px; border: 1px solid #b8c6d9; border-radius: 50%;
-        background: linear-gradient(#fff, #fff) padding-box, conic-gradient(from -10deg, #f0f5fb, #dbe8f5, #f0f5fb) border-box;
-        color: #40506a; font-size: 0.62rem; font-weight: 900;
+        --direction: 0deg; position: relative; width: 66px; height: 66px; border: 1px solid var(--compass-border); border-radius: 50%;
+        background: var(--compass-bg);
+        color: var(--compass-ink); font-size: 0.62rem; font-weight: 900;
       }
       .north,.east,.south,.west { position: absolute; }
       .north { top: 3px; left: 50%; transform: translateX(-50%); }
@@ -142,6 +186,7 @@
       @media (max-width: 760px) {
         .app-shell { width: min(100% - 28px, 1180px); padding-top: 22px; }
         .topbar, .section-heading { display: grid; }
+        .topbar-actions { flex-wrap: wrap; }
         .timezone-chip { width: fit-content; }
         .workspace { padding: 16px; }
         .search-row, .summary-strip { grid-template-columns: 1fr; }
@@ -174,7 +219,10 @@
           <h1>Décodeur METAR</h1>
           <p>Transformez un message météo aéronautique en lecture française, avec conversions et repères visuels.</p>
         </div>
-        <div class="timezone-chip" id="timezoneChip">UTC → fuseau local</div>
+        <div class="topbar-actions">
+          <div class="timezone-chip" id="timezoneChip">UTC → fuseau local</div>
+          <button class="theme-toggle" id="themeToggle" type="button" aria-label="Basculer le mode sombre">☾ Mode sombre</button>
+        </div>
       </header>
       <section class="workspace">
         <form class="airport-search" id="searchForm">
@@ -223,10 +271,11 @@
         options: document.getElementById("airportOptions"), button: document.getElementById("fetchButton"), status: document.getElementById("statusLine"),
         input: document.getElementById("metarInput"), rowCount: document.getElementById("rowCount"), warningCount: document.getElementById("warningCount"),
         localTime: document.getElementById("localTime"), normalized: document.getElementById("normalizedMetar"), table: document.getElementById("tableFrame"),
-        airportInfo: document.getElementById("airportInfo")
+        airportInfo: document.getElementById("airportInfo"), themeToggle: document.getElementById("themeToggle")
       };
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       const initialIcao = getIcaoFromUrl();
+      applyTheme(getStoredTheme());
       els.timezoneChip.textContent = "UTC → " + timeZone;
       if (initialIcao) els.query.value = initialIcao;
       loadAirportData().then(() => {
@@ -234,6 +283,7 @@
         if (initialIcao) fetchAndRenderMetar();
       });
       els.query.addEventListener("input", () => updateAirportSuggestions(els.query.value));
+      els.themeToggle.addEventListener("click", toggleTheme);
       els.input.addEventListener("input", render);
       els.form.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -266,6 +316,21 @@
         const url = new URL(window.location.href);
         url.searchParams.set("icao", icao.toUpperCase());
         window.history.replaceState({}, "", url);
+      }
+      function getStoredTheme() {
+        const saved = localStorage.getItem("metar-theme");
+        if (saved === "light" || saved === "dark") return saved;
+        return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+      function applyTheme(theme) {
+        document.documentElement.dataset.theme = theme;
+        els.themeToggle.textContent = theme === "dark" ? "☀ Mode clair" : "☾ Mode sombre";
+        els.themeToggle.setAttribute("aria-pressed", String(theme === "dark"));
+      }
+      function toggleTheme() {
+        const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+        localStorage.setItem("metar-theme", nextTheme);
+        applyTheme(nextTheme);
       }
       async function fetchMetar(query) {
         await ensureAirportData();

@@ -16,6 +16,8 @@ https://sharkoz.github.io/decodeur-metar/?icao=LFBD
 
 À l'ouverture, la page préremplit l'OACI et récupère automatiquement le METAR correspondant.
 
+La page propose un mode clair/sombre. Le choix est conservé localement dans le navigateur, avec le thème système utilisé par défaut.
+
 ## Sources de données
 
 - Autocomplétion et détails aéroport : `https://raw.githubusercontent.com/mwgg/Airports/master/airports.json`
