@@ -35,6 +35,7 @@
         --compass-border: #b8c6d9;
         --compass-bg: linear-gradient(#fff, #fff) padding-box, conic-gradient(from -10deg, #f0f5fb, #dbe8f5, #f0f5fb) border-box;
         --compass-ink: #40506a;
+        --target-bg: rgba(31, 111, 235, 0.08);
       }
       :root[data-theme="dark"] {
         color-scheme: dark;
@@ -65,6 +66,7 @@
         --compass-border: #50647f;
         --compass-bg: linear-gradient(#152132, #152132) padding-box, conic-gradient(from -10deg, #26384f, #172539, #26384f) border-box;
         --compass-ink: #cad7e8;
+        --target-bg: rgba(106, 164, 255, 0.14);
       }
       * { box-sizing: border-box; }
       body {
@@ -140,6 +142,17 @@
         margin: 0; max-width: 680px; color: var(--muted); font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
         font-size: 0.84rem; text-align: right; overflow-wrap: anywhere;
       }
+      .report-blocks {
+        display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px;
+      }
+      .report-token {
+        border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--ink);
+        padding: 8px 10px; font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; font-size: 0.84rem;
+        font-weight: 800; cursor: pointer; box-shadow: 0 6px 16px rgba(31, 55, 92, 0.05);
+      }
+      .report-token:hover, .report-token:focus-visible { border-color: var(--accent); color: var(--accent); outline: none; }
+      tr.target-row td { background: var(--target-bg); }
+      .detail-target { scroll-margin-top: 22px; }
       .table-frame { overflow: hidden; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); box-shadow: var(--shadow); }
       table { width: 100%; border-collapse: collapse; table-layout: fixed; }
       th { background: var(--table-head-bg); color: var(--table-head-ink); padding: 13px 15px; text-align: left; font-size: 0.78rem; text-transform: uppercase; }
@@ -195,6 +208,8 @@
         .summary-strip div:last-child { border-bottom: 0; }
         .airport-info-grid { grid-template-columns: 1fr 1fr; }
         .normalized { text-align: left; }
+        .report-blocks { gap: 7px; }
+        .report-token { font-size: 0.8rem; padding: 7px 9px; }
         .table-frame { border: 0; box-shadow: none; background: transparent; }
         table, thead, tbody, tr, th, td { display: block; }
         thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
@@ -251,6 +266,7 @@
           <h2>Décomposition pédagogique</h2>
           <p class="normalized" id="normalizedMetar"></p>
         </div>
+        <div class="report-blocks" id="reportBlocks" aria-label="Groupes du METAR cliquables"></div>
         <div class="table-frame" id="tableFrame"></div>
       </section>
     </main>
@@ -271,7 +287,7 @@
         options: document.getElementById("airportOptions"), button: document.getElementById("fetchButton"), status: document.getElementById("statusLine"),
         input: document.getElementById("metarInput"), rowCount: document.getElementById("rowCount"), warningCount: document.getElementById("warningCount"),
         localTime: document.getElementById("localTime"), normalized: document.getElementById("normalizedMetar"), table: document.getElementById("tableFrame"),
-        airportInfo: document.getElementById("airportInfo"), themeToggle: document.getElementById("themeToggle")
+        reportBlocks: document.getElementById("reportBlocks"), airportInfo: document.getElementById("airportInfo"), themeToggle: document.getElementById("themeToggle")
       };
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       const initialIcao = getIcaoFromUrl();
@@ -284,6 +300,10 @@
       });
       els.query.addEventListener("input", () => updateAirportSuggestions(els.query.value));
       els.themeToggle.addEventListener("click", toggleTheme);
+      els.reportBlocks.addEventListener("click", (event) => {
+        const button = event.target.closest(".report-token");
+        if (button) scrollToDetail(button.dataset.target);
+      });
       els.input.addEventListener("input", render);
       els.form.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -474,6 +494,7 @@
         els.warningCount.textContent = parsed.warnings.length;
         els.localTime.textContent = parsed.summary.observedAtLocal || "—";
         els.normalized.textContent = parsed.normalized || "Aucun METAR à décoder pour le moment.";
+        els.reportBlocks.innerHTML = parsed.rows.length ? reportBlocksHtml(parsed.rows) : "";
         els.table.innerHTML = parsed.rows.length ? tableHtml(parsed.rows) : '<div class="empty-state"><p>Collez un METAR pour voir apparaître la lecture groupe par groupe.</p></div>';
       }
       function parseMetar(rawInput) {
@@ -566,11 +587,25 @@
       function cardinal(deg) { return ["N","NE","E","SE","S","SO","O","NO"][Math.round(((deg % 360) / 45)) % 8]; }
       function fmt(value, digits) { return new Intl.NumberFormat("fr-FR", { maximumFractionDigits: digits }).format(value); }
       function makeRow(index, token, category, literal, pedagogical) { return { id: index + "-" + token, token, category, literal, pedagogical }; }
+      function reportBlocksHtml(rows) {
+        return rows.map((row, index) => '<button class="report-token" type="button" data-target="' + esc(anchorId(row)) + '" title="Voir le détail de ' + esc(row.token) + '">' + esc(row.token) + '</button>').join("");
+      }
       function tableHtml(rows) {
         return '<table><thead><tr><th>Groupe</th><th>Lecture littérale</th><th>Explication pédagogique</th></tr></thead><tbody>' + rows.map(rowHtml).join("") + "</tbody></table>";
       }
       function rowHtml(row) {
-        return '<tr class="' + (row.warning ? "warning-row" : "") + '"><td data-label="Groupe"><div class="token-cell"><span class="category-icon">' + (ICONS[row.category] || "◌") + '</span><div><code>' + esc(row.token) + '</code><span>' + CATEGORIES[row.category] + '</span></div></div></td><td data-label="Lecture littérale">' + esc(row.literal) + '</td><td data-label="Explication pédagogique"><div class="pedagogy-cell">' + compassHtml(row.visual) + '<p>' + esc(row.pedagogical) + '</p></div></td></tr>';
+        const id = anchorId(row);
+        return '<tr id="' + esc(id) + '" class="detail-target ' + (row.warning ? "warning-row" : "") + '"><td data-label="Groupe"><div class="token-cell"><span class="category-icon">' + (ICONS[row.category] || "◌") + '</span><div><code>' + esc(row.token) + '</code><span>' + CATEGORIES[row.category] + '</span></div></div></td><td data-label="Lecture littérale">' + esc(row.literal) + '</td><td data-label="Explication pédagogique"><div class="pedagogy-cell">' + compassHtml(row.visual) + '<p>' + esc(row.pedagogical) + '</p></div></td></tr>';
+      }
+      function anchorId(row) {
+        return 'detail-' + row.id.replace(/[^a-zA-Z0-9_-]/g, '-');
+      }
+      function scrollToDetail(targetId) {
+        const target = document.getElementById(targetId);
+        if (!target) return;
+        document.querySelectorAll('.target-row').forEach((row) => row.classList.remove('target-row'));
+        target.classList.add('target-row');
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
       function compassHtml(visual) {
         if (!visual) return "";
