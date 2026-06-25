@@ -36,6 +36,7 @@
         --compass-bg: linear-gradient(#fff, #fff) padding-box, conic-gradient(from -10deg, #f0f5fb, #dbe8f5, #f0f5fb) border-box;
         --compass-ink: #40506a;
         --target-bg: rgba(31, 111, 235, 0.08);
+        --favorite-bg: #fff7d6;
       }
       :root[data-theme="dark"] {
         color-scheme: dark;
@@ -67,6 +68,7 @@
         --compass-bg: linear-gradient(#152132, #152132) padding-box, conic-gradient(from -10deg, #26384f, #172539, #26384f) border-box;
         --compass-ink: #cad7e8;
         --target-bg: rgba(106, 164, 255, 0.14);
+        --favorite-bg: rgba(242, 184, 75, 0.16);
       }
       * { box-sizing: border-box; }
       body {
@@ -92,15 +94,29 @@
         box-shadow: var(--shadow); padding: 22px;
       }
       .airport-search { display: grid; gap: 10px; margin-bottom: 18px; }
+      .favorites-bar { display: none; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 4px; }
+      .favorites-bar.visible { display: flex; }
+      .favorites-label { color: var(--muted); font-size: 0.78rem; font-weight: 900; text-transform: uppercase; }
+      .favorite-chip {
+        border: 1px solid var(--border); border-radius: 8px; background: var(--favorite-bg); color: var(--ink);
+        padding: 6px 9px; font-size: 0.82rem; font-weight: 900; cursor: pointer;
+      }
+      .favorite-chip:hover, .favorite-chip:focus-visible { border-color: var(--amber); color: var(--amber); outline: none; }
       label { color: var(--ink); display: block; font-size: 0.92rem; font-weight: 800; }
       .search-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
       .input-with-icon { position: relative; display: flex; align-items: center; }
       .search-icon { position: absolute; left: 13px; color: var(--muted); width: 18px; height: 18px; }
+      .favorite-toggle {
+        position: absolute; right: 8px; width: 34px; height: 34px; border: 0; border-radius: 8px;
+        background: transparent; color: var(--muted); cursor: pointer; font-size: 1.08rem; display: grid; place-items: center;
+      }
+      .favorite-toggle:hover, .favorite-toggle:focus-visible { background: var(--favorite-bg); color: var(--amber); outline: none; }
+      .favorite-toggle.active { color: var(--amber); }
       input, textarea {
         width: 100%; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-strong);
         color: var(--ink); outline: none; transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
       }
-      input { min-height: 46px; padding: 0 14px 0 42px; }
+      input { min-height: 46px; padding: 0 48px 0 42px; }
       textarea {
         display: block; margin-top: 8px; min-height: 118px; resize: vertical; padding: 15px;
         font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; font-size: 0.98rem; line-height: 1.55;
@@ -135,6 +151,12 @@
       .airport-info-item { display: grid; gap: 2px; min-width: 0; }
       .airport-info-item span { color: var(--muted); font-size: 0.74rem; font-weight: 900; text-transform: uppercase; }
       .airport-info-item strong { color: var(--ink); font-size: 0.93rem; overflow-wrap: anywhere; }
+      .airport-info-action { display: flex; justify-content: flex-end; }
+      .airport-favorite-link {
+        border: 0; background: transparent; color: var(--accent); font-size: 0.9rem; font-weight: 800;
+        padding: 0; cursor: pointer;
+      }
+      .airport-favorite-link:hover, .airport-favorite-link:focus-visible { color: var(--amber); outline: none; }
       .decode-section { margin-top: 30px; }
       .section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 14px; }
       h2 { margin: 0; color: var(--ink); font-size: clamp(1.35rem, 2vw, 2rem); letter-spacing: 0; }
@@ -210,6 +232,7 @@
         .normalized { text-align: left; }
         .report-blocks { gap: 7px; }
         .report-token { font-size: 0.8rem; padding: 7px 9px; }
+        .airport-info-action { justify-content: flex-start; }
         .table-frame { border: 0; box-shadow: none; background: transparent; }
         table, thead, tbody, tr, th, td { display: block; }
         thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
@@ -241,11 +264,13 @@
       </header>
       <section class="workspace">
         <form class="airport-search" id="searchForm">
+          <div class="favorites-bar" id="favoritesBar" aria-label="Aérodromes favoris"></div>
           <label for="airportQuery">Rechercher un aérodrome ou code OACI</label>
           <div class="search-row">
             <div class="input-with-icon">
               <span class="search-icon">⌕</span>
               <input id="airportQuery" list="airportOptions" value="LFPG" placeholder="LFPG, Bordeaux, Paris..." autocomplete="off" />
+              <button class="favorite-toggle" id="favoriteToggle" type="button" aria-label="Ajouter aux favoris" title="Ajouter aux favoris">☆</button>
               <datalist id="airportOptions"></datalist>
             </div>
             <button class="primary-button" id="fetchButton" type="submit">⌕ Récupérer</button>
@@ -276,6 +301,7 @@
       let airportsLoadPromise = null;
       let airportsByIcao = new Map();
       let airportSearchIndex = [];
+      let favoriteIcaos = loadFavorites();
       const DESCRIPTORS = { BC:"bancs", BL:"chasse elevee", DR:"chasse basse", FZ:"se congelant", MI:"mince", PR:"partiel", SH:"averses", TS:"orage" };
       const PHENOMENA = { BR:"brume", DS:"tempete de poussiere", DU:"poussiere", DZ:"bruine", FC:"trombe ou tornade", FG:"brouillard", FU:"fumee", GR:"grele", GS:"gresil", HZ:"brume seche", IC:"cristaux de glace", PL:"granules de glace", RA:"pluie", SA:"sable", SG:"neige en grains", SN:"neige", SQ:"grain", SS:"tempete de sable", UP:"precipitation inconnue", VA:"cendres volcaniques" };
       const CLOUDS = { FEW:"quelques nuages", SCT:"nuages epars", BKN:"ciel fragmente", OVC:"ciel couvert", NSC:"aucun nuage significatif", NCD:"aucun nuage detecte", VV:"visibilite verticale" };
@@ -284,7 +310,8 @@
       const ICONS = { wind:"↗", visibility:"◉", cloud:"☁", pressure:"◌", station:"⌖", temperature:"℃", time:"◷" };
       const els = {
         timezoneChip: document.getElementById("timezoneChip"), form: document.getElementById("searchForm"), query: document.getElementById("airportQuery"),
-        options: document.getElementById("airportOptions"), button: document.getElementById("fetchButton"), status: document.getElementById("statusLine"),
+        options: document.getElementById("airportOptions"), favoriteToggle: document.getElementById("favoriteToggle"), favoritesBar: document.getElementById("favoritesBar"),
+        button: document.getElementById("fetchButton"), status: document.getElementById("statusLine"),
         input: document.getElementById("metarInput"), rowCount: document.getElementById("rowCount"), warningCount: document.getElementById("warningCount"),
         localTime: document.getElementById("localTime"), normalized: document.getElementById("normalizedMetar"), table: document.getElementById("tableFrame"),
         reportBlocks: document.getElementById("reportBlocks"), airportInfo: document.getElementById("airportInfo"), themeToggle: document.getElementById("themeToggle")
@@ -294,11 +321,21 @@
       applyTheme(getStoredTheme());
       els.timezoneChip.textContent = "UTC → " + timeZone;
       if (initialIcao) els.query.value = initialIcao;
+      renderFavorites();
+      updateFavoriteControls();
       loadAirportData().then(() => {
         updateAirportSuggestions(els.query.value);
         if (initialIcao) fetchAndRenderMetar();
       });
-      els.query.addEventListener("input", () => updateAirportSuggestions(els.query.value));
+      els.query.addEventListener("input", () => {
+        updateAirportSuggestions(els.query.value);
+        updateFavoriteControls();
+      });
+      els.favoriteToggle.addEventListener("click", () => toggleFavorite(resolveFavoriteIcao()));
+      els.favoritesBar.addEventListener("click", (event) => {
+        const button = event.target.closest(".favorite-chip");
+        if (button) selectFavorite(button.dataset.icao);
+      });
       els.themeToggle.addEventListener("click", toggleTheme);
       els.reportBlocks.addEventListener("click", (event) => {
         const button = event.target.closest(".report-token");
@@ -318,7 +355,8 @@
           els.query.value = result.icao;
           updateUrlIcao(result.icao);
           updateAirportSuggestions(result.icao);
-          renderAirportInfo(result.airport);
+          updateFavoriteControls(result.icao);
+          renderAirportInfo(result.airport || getAirportInfo(result.icao));
           setStatus("success", (result.airportLabel || result.icao) + " mis à jour depuis " + result.source + (result.airport ? " + airports.json" : "") + ".");
           render();
         } catch (error) {
@@ -336,6 +374,66 @@
         const url = new URL(window.location.href);
         url.searchParams.set("icao", icao.toUpperCase());
         window.history.replaceState({}, "", url);
+      }
+      function loadFavorites() {
+        try {
+          const parsed = JSON.parse(localStorage.getItem("metar-favorites") || "[]");
+          return Array.isArray(parsed) ? parsed.filter((icao) => /^[A-Z0-9]{4}$/.test(icao)) : [];
+        } catch (_) {
+          return [];
+        }
+      }
+      function saveFavorites() {
+        localStorage.setItem("metar-favorites", JSON.stringify(favoriteIcaos));
+      }
+      function resolveFavoriteIcao() {
+        const resolved = resolveIcao(els.query.value);
+        return resolved ? resolved.icao : "";
+      }
+      function isFavorite(icao) {
+        return favoriteIcaos.includes(String(icao || "").toUpperCase());
+      }
+      function toggleFavorite(icao) {
+        const normalized = String(icao || "").toUpperCase();
+        if (!/^[A-Z0-9]{4}$/.test(normalized)) return;
+        favoriteIcaos = isFavorite(normalized)
+          ? favoriteIcaos.filter((favorite) => favorite !== normalized)
+          : [...favoriteIcaos, normalized].sort();
+        saveFavorites();
+        renderFavorites();
+        updateFavoriteControls(normalized);
+        const airport = getAirportInfo(normalized);
+        if (airport && normalizeSearch(els.query.value) === normalizeSearch(normalized)) renderAirportInfo(airport);
+      }
+      function renderFavorites() {
+        if (!favoriteIcaos.length) {
+          els.favoritesBar.classList.remove("visible");
+          els.favoritesBar.innerHTML = "";
+          return;
+        }
+        els.favoritesBar.classList.add("visible");
+        els.favoritesBar.innerHTML = '<span class="favorites-label">Favoris</span>' + favoriteIcaos.map((icao) => {
+          const airport = getAirportInfo(icao);
+          const label = airport ? icao + " · " + (airport.city || airport.name) : icao;
+          return '<button class="favorite-chip" type="button" data-icao="' + esc(icao) + '" title="Charger ' + esc(label) + '">★ ' + esc(label) + '</button>';
+        }).join("");
+      }
+      function updateFavoriteControls(forcedIcao) {
+        const icao = forcedIcao || resolveFavoriteIcao();
+        const active = isFavorite(icao);
+        els.favoriteToggle.classList.toggle("active", active);
+        els.favoriteToggle.textContent = active ? "★" : "☆";
+        els.favoriteToggle.title = active ? "Supprimer des favoris" : "Ajouter aux favoris";
+        els.favoriteToggle.setAttribute("aria-label", els.favoriteToggle.title);
+      }
+      async function selectFavorite(icao) {
+        els.query.value = icao;
+        updateFavoriteControls(icao);
+        await fetchAndRenderMetar();
+      }
+      function favoriteActionHtml(icao) {
+        const active = isFavorite(icao);
+        return '<div class="airport-info-action"><button class="airport-favorite-link" type="button" onclick="toggleFavorite(\'' + escJs(icao) + '\')">' + (active ? '★ Supprimer des favoris' : '☆ Ajouter aux favoris') + '</button></div>';
       }
       function getStoredTheme() {
         const saved = localStorage.getItem("metar-theme");
@@ -395,6 +493,8 @@
               });
             airportsLoaded = true;
             updateAirportSuggestions(els.query.value);
+            renderFavorites();
+            updateFavoriteControls();
             return airportsByIcao;
           })
           .catch(() => {
@@ -462,7 +562,7 @@
           ["Altitude", altitude], ["Latitude", info.lat !== undefined ? Number(info.lat).toFixed(5) : "—"],
           ["Longitude", info.lon !== undefined ? Number(info.lon).toFixed(5) : "—"], ["Fuseau", info.timezone || "—"]
         ];
-        els.airportInfo.innerHTML = '<h3>' + esc(info.name || info.icao) + '</h3><div class="airport-info-grid">' + items.map(([label, value]) => '<div class="airport-info-item"><span>' + esc(label) + '</span><strong>' + esc(value) + '</strong></div>').join("") + '</div>';
+        els.airportInfo.innerHTML = '<h3>' + esc(info.name || info.icao) + '</h3><div class="airport-info-grid">' + items.map(([label, value]) => '<div class="airport-info-item"><span>' + esc(label) + '</span><strong>' + esc(value) + '</strong></div>').join("") + '</div>' + favoriteActionHtml(info.icao);
         els.airportInfo.classList.add("visible");
       }
       function resolveIcao(query) {
@@ -614,6 +714,9 @@
       }
       function esc(value) {
         return String(value).replace(/[&<>"']/g, (char) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[char]));
+      }
+      function escJs(value) {
+        return String(value).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
       }
       render();
     </script>
