@@ -226,17 +226,28 @@
         airportInfo: document.getElementById("airportInfo")
       };
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const initialIcao = getIcaoFromUrl();
       els.timezoneChip.textContent = "UTC → " + timeZone;
-      loadAirportData();
+      if (initialIcao) els.query.value = initialIcao;
+      loadAirportData().then(() => {
+        updateAirportSuggestions(els.query.value);
+        if (initialIcao) fetchAndRenderMetar();
+      });
       els.query.addEventListener("input", () => updateAirportSuggestions(els.query.value));
       els.input.addEventListener("input", render);
       els.form.addEventListener("submit", async (event) => {
         event.preventDefault();
+        await fetchAndRenderMetar();
+      });
+      async function fetchAndRenderMetar() {
         setStatus("loading", "Récupération du METAR en cours...");
         els.button.disabled = true;
         try {
           const result = await fetchMetar(els.query.value);
           els.input.value = result.raw;
+          els.query.value = result.icao;
+          updateUrlIcao(result.icao);
+          updateAirportSuggestions(result.icao);
           renderAirportInfo(result.airport);
           setStatus("success", (result.airportLabel || result.icao) + " mis à jour depuis " + result.source + (result.airport ? " + airports.json" : "") + ".");
           render();
@@ -245,7 +256,17 @@
         } finally {
           els.button.disabled = false;
         }
-      });
+      }
+      function getIcaoFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const value = (params.get("icao") || "").trim().toUpperCase();
+        return /^[A-Z0-9]{4}$/.test(value) ? value : "";
+      }
+      function updateUrlIcao(icao) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("icao", icao.toUpperCase());
+        window.history.replaceState({}, "", url);
+      }
       async function fetchMetar(query) {
         await ensureAirportData();
         const resolved = resolveIcao(query);
