@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Décodeur METAR">
+  <rect width="512" height="512" fill="#1f6feb"/>
+  <g fill="none" stroke="#ffffff" stroke-width="24" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="256" y1="400" x2="256" y2="150"/>
+    <line x1="256" y1="224" x2="334" y2="190"/>
+    <line x1="256" y1="254" x2="334" y2="220"/>
+  </g>
+  <polygon points="256,150 256,206 332,150" fill="#ffffff"/>
+</svg>

@@ -22,9 +22,13 @@ https://sharkoz.github.io/decodeur-metar/?icao=LFBD
 
 Le bouton de géolocalisation (icône cible, à gauche de l'étoile favoris) permet de relancer cette recherche à tout moment. Si un aérodrome est déjà sélectionné, il déroule la liste des aérodromes proches avec leur disponibilité **sans** en charger un automatiquement : à vous de choisir.
 
-Le champ de recherche propose une autocomplétion : en saisissant un code OACI, un code IATA ou un nom de ville/aérodrome, un bandeau de suggestions s'affiche (navigable au clavier avec les flèches et Entrée). Quand la position est connue, la distance en km est indiquée, et la disponibilité METAR des 5 premières suggestions est testée (les indisponibles sont grisées).
+Le champ de recherche propose une autocomplétion : en saisissant un code OACI, un code IATA ou un nom de ville/aérodrome, un bandeau de suggestions s'affiche (navigable au clavier avec les flèches et Entrée). Quand la position est connue, les suggestions sont triées par distance, la distance en km et une flèche de direction sont affichées, et la disponibilité METAR de chaque suggestion est testée (les indisponibles sont grisées).
 
 La page propose un mode clair/sombre. Le choix est conservé localement dans le navigateur, avec le thème système utilisé par défaut.
+
+### Installation sur mobile (PWA)
+
+L'application est une PWA installable : sur Android/Chrome via « Ajouter à l'écran d'accueil » (ou la bannière d'installation), sur iOS via le menu Partager → « Sur l'écran d'accueil ». Elle s'ouvre alors en plein écran avec son icône (barbule de vent). Un *service worker* met en cache l'interface ; hors-ligne, seule la dernière observation et la liste des aérodromes déjà chargées restent consultables (les données temps réel nécessitent le réseau).
 
 ## Sources de données
 
@@ -36,4 +40,6 @@ Aucune donnée d'aéroport n'est copiée localement : le fichier `airports.json`
 
 ## Déploiement
 
-Le site est un fichier statique. GitHub Pages sert la branche `gh-pages`, avec `index.html` à la racine.
+Le site est statique. GitHub Pages le sert depuis la branche `main`, avec `index.html` à la racine. Les fichiers PWA (`manifest.json`, `sw.js`, `icon.svg`, `icon-*.png`, `apple-touch-icon.png`) doivent rester à la racine à côté de `index.html`.
+
+> Note : après une mise à jour, le *service worker* sert l'ancienne version en cache jusqu'à sa prochaine activation. Le cache porte une version (`metar-shell-v1` dans `sw.js`) ; l'incrémenter force le rafraîchissement chez les visiteurs.
