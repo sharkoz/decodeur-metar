@@ -6,6 +6,8 @@ Elle permet de coller un METAR ou de récupérer un METAR par code OACI, puis de
 
 L'encart de détail de l'aérodrome affiche aussi la distance et la direction depuis votre position (si la géoloc est connue) et des coordonnées cliquables qui ouvrent une carte.
 
+Chaque groupe décodé explique le sens détaillé des sigles (ex. BKN = *Broken*, ciel fragmenté de 5 à 7 octas) et propose un menu accordéon « autres valeurs possibles » listant tout le vocabulaire de la catégorie (nébulosité, temps présent, tendances...) pour apprendre.
+
 ## Utilisation
 
 Ouvrir directement `index.html` dans un navigateur, ou utiliser la version GitHub Pages :

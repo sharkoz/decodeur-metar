@@ -225,8 +225,27 @@
       }
       code { display: block; color: var(--ink); font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; font-size: 0.96rem; font-weight: 800; overflow-wrap: anywhere; }
       .token-cell span:last-child { display: block; margin-top: 2px; color: var(--muted); font-size: 0.82rem; font-weight: 700; }
-      .pedagogy-cell { display: flex; align-items: center; gap: 14px; }
+      .pedagogy-cell { display: flex; align-items: flex-start; gap: 14px; }
       .pedagogy-cell p { margin: 0; }
+      .pedagogy-text { min-width: 0; flex: 1; }
+      .learn { margin-top: 10px; }
+      .learn > summary {
+        cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 6px;
+        font-size: 0.78rem; font-weight: 800; color: var(--accent); padding: 3px 0; user-select: none;
+      }
+      .learn > summary::-webkit-details-marker { display: none; }
+      .learn > summary::after { content: "▸"; transition: transform 150ms ease; }
+      .learn[open] > summary::after { transform: rotate(90deg); }
+      .learn > summary:hover { text-decoration: underline; }
+      .learn-body { margin-top: 8px; display: grid; gap: 3px; border-left: 2px solid var(--border); padding-left: 12px; }
+      .learn-section { font-size: 0.68rem; font-weight: 900; text-transform: uppercase; color: var(--muted); margin-top: 8px; letter-spacing: 0.02em; }
+      .learn-section:first-child { margin-top: 0; }
+      .learn-item { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 10px; align-items: baseline; padding: 4px 7px; border-radius: 6px; }
+      .learn-item code { display: inline; font-size: 0.82rem; font-weight: 800; color: var(--muted); }
+      .learn-item strong { font-size: 0.84rem; color: var(--ink); font-weight: 800; }
+      .learn-item span { display: block; margin-top: 1px; font-size: 0.8rem; color: var(--muted); font-weight: 600; }
+      .learn-item.active { background: var(--target-bg); }
+      .learn-item.active code, .learn-item.active strong { color: var(--accent); }
       .mini-compass { flex: 0 0 auto; width: 100px; display: grid; gap: 6px; justify-items: center; }
       .compass-face {
         position: relative; width: 66px; height: 66px; margin: 16px; border: 1px solid var(--compass-border); border-radius: 50%;
@@ -347,6 +366,91 @@
       const PHENOMENA = { BR:"brume", DS:"tempete de poussiere", DU:"poussiere", DZ:"bruine", FC:"trombe ou tornade", FG:"brouillard", FU:"fumee", GR:"grele", GS:"gresil", HZ:"brume seche", IC:"cristaux de glace", PL:"granules de glace", RA:"pluie", SA:"sable", SG:"neige en grains", SN:"neige", SQ:"grain", SS:"tempete de sable", UP:"precipitation inconnue", VA:"cendres volcaniques" };
       const CLOUDS = { FEW:"quelques nuages", SCT:"nuages epars", BKN:"ciel fragmente", OVC:"ciel couvert", NSC:"aucun nuage significatif", NCD:"aucun nuage detecte", VV:"visibilite verticale" };
       const TRENDS = { BECMG:"evolution progressive attendue", NOSIG:"pas de changement significatif attendu", PROB30:"probabilite de 30 %", PROB40:"probabilite de 40 %", TEMPO:"phenomene temporaire attendu" };
+      const ABBR_EN = {
+        METAR:"Meteorological Aerodrome Report", SPECI:"Special Report", AUTO:"Automated", COR:"Corrected",
+        CAVOK:"Ceiling And Visibility OK", NDV:"No Directional Variation", NSW:"No Significant Weather",
+        FEW:"Few", SCT:"Scattered", BKN:"Broken", OVC:"Overcast", NSC:"No Significant Cloud", NCD:"No Cloud Detected", VV:"Vertical Visibility", CB:"Cumulonimbus", TCU:"Towering Cumulus",
+        VRB:"Variable", KT:"Knots", MPS:"Metres Per Second", KMH:"Kilometres Per Hour",
+        NOSIG:"No Significant Change", BECMG:"Becoming", TEMPO:"Temporary", PROB30:"Probability 30%", PROB40:"Probability 40%",
+        MI:"Shallow", BC:"Patches", PR:"Partial", DR:"Low Drifting", BL:"Blowing", SH:"Showers", TS:"Thunderstorm", FZ:"Freezing",
+        DZ:"Drizzle", RA:"Rain", SN:"Snow", SG:"Snow Grains", IC:"Ice Crystals", PL:"Ice Pellets", GR:"Hail", GS:"Small Hail", UP:"Unknown Precipitation",
+        BR:"Mist", FG:"Fog", FU:"Smoke", VA:"Volcanic Ash", DU:"Widespread Dust", SA:"Sand", HZ:"Haze",
+        SQ:"Squall", FC:"Funnel Cloud", SS:"Sandstorm", DS:"Duststorm"
+      };
+      const CLOUD_OCTAS = { FEW:"1 à 2 octas (huitièmes de ciel)", SCT:"3 à 4 octas", BKN:"5 à 7 octas", OVC:"8 octas, ciel couvert", VV:"ciel masqué (brouillard...)", NSC:"rien de significatif", NCD:"capteur auto : rien détecté" };
+      const CLOUDTYPE_FR = { CB:"cumulonimbus (orage, à éviter)", TCU:"cumulus bourgeonnant (fort développement)" };
+      const REFERENCE = {
+        type: { label:"Types de message", items:[
+          ["METAR","Meteorological Aerodrome Report","Observation régulière, souvent toutes les 30 min"],
+          ["SPECI","Special Report","Observation spéciale hors heure si conditions changeantes"],
+          ["AUTO","Automated","Produit par une station automatique"],
+          ["COR","Corrected","Message corrigé remplaçant un précédent"]
+        ]},
+        station: { label:"Code OACI (4 lettres)", items:[
+          ["LF","France métropolitaine","Ex. LFPG Paris-CDG, LFBO Toulouse"],
+          ["EG","Royaume-Uni","Ex. EGLL Londres-Heathrow"],
+          ["ED","Allemagne","Ex. EDDF Francfort"],
+          ["K","États-Unis contigus","Ex. KJFK New York"],
+          ["—","Structure","1ʳᵉ lettre = région, 2ᵉ = pays, 2 dernières = aérodrome"]
+        ]},
+        time: { label:"Format date/heure", items:[
+          ["JJHHMMZ","Jour + heure + minute UTC","Ex. 251830Z = le 25 à 18 h 30 UTC"],
+          ["Z","Zulu = UTC","Toujours en temps universel, jamais l'heure locale"]
+        ]},
+        wind: { label:"Codage du vent", items:[
+          ["ddd ff KT","Direction (°) + vitesse en nœuds","Ex. 24012KT = du 240° à 12 kt"],
+          ["G","Gust = rafale","Ex. 24012G22KT = rafales à 22 kt"],
+          ["VRB","Variable","Direction indéterminée (vent faible)"],
+          ["00000KT","Calme","Vent nul"],
+          ["dddVddd","Secteur variable","Ex. 200V280 = oscille entre 200° et 280°"],
+          ["KT","Knots — nœuds","Unité par défaut"],
+          ["MPS","Metres Per Second","Surtout Russie / Asie"],
+          ["KMH","Kilometres Per Hour","Kilomètres par heure"]
+        ]},
+        visibility: { label:"Visibilité", items:[
+          ["9999","10 km ou plus","Visibilité maximale codée"],
+          ["nnnn","Distance en mètres","Ex. 2500 = 2,5 km"],
+          ["CAVOK","Ceiling And Visibility OK","Visi ≥ 10 km, pas de nuage bas < 1500 m ni CB, pas de temps significatif"],
+          ["NDV","No Directional Variation","Capteur auto sans direction de visi"]
+        ]},
+        cloud: { label:"Nébulosité & types de nuages", items:[
+          ["FEW","Few — quelques nuages","1 à 2 octas (huitièmes de ciel)"],
+          ["SCT","Scattered — épars","3 à 4 octas"],
+          ["BKN","Broken — fragmenté","5 à 7 octas"],
+          ["OVC","Overcast — couvert","8 octas"],
+          ["VV","Vertical Visibility","Ciel masqué, ex. VV002"],
+          ["NSC","No Significant Cloud","Rien sous 1500 m, pas de CB"],
+          ["NCD","No Cloud Detected","Station auto : aucun nuage"],
+          ["CB","Cumulonimbus","Orage, à éviter"],
+          ["TCU","Towering Cumulus","Cumulus bourgeonnant"]
+        ]},
+        temperature: { label:"Température / point de rosée", items:[
+          ["TT/DD","Température / point de rosée (°C)","Ex. 24/14"],
+          ["M","Minus = négatif","Ex. M03/M07 = -3 °C / -7 °C"],
+          ["écart faible","Air proche de la saturation","Risque de brouillard / nuages bas"]
+        ]},
+        pressure: { label:"Pression (calage altimétrique)", items:[
+          ["Q","QNH en hectopascals (hPa)","Ex. Q1016 = 1016 hPa, standard en Europe"],
+          ["A","Altimeter en pouces de mercure (inHg)","Ex. A2992 = 29.92 inHg, standard aux USA"]
+        ]},
+        trend: { label:"Tendances (2 h à venir)", items:[
+          ["NOSIG","No Significant Change","Pas de changement significatif"],
+          ["BECMG","Becoming","Évolution durable attendue"],
+          ["TEMPO","Temporary","Variations temporaires et brèves"],
+          ["PROB30","Probability 30%","30 % de probabilité"],
+          ["PROB40","Probability 40%","40 % de probabilité"]
+        ]},
+        runway: { label:"RVR — portée visuelle de piste", items:[
+          ["Rnn","Numéro de piste","Ex. R27 = piste 27 (L/C/R si parallèles)"],
+          ["nnnn","Portée en mètres","Distance visible le long de la piste"],
+          ["P / M","Plus / Minus","Au-dessus (P) ou en dessous (M) de la plage mesurable"],
+          ["U / D / N","Up / Down / No change","Tendance de la RVR"]
+        ]},
+        remark: { label:"Remarques", items:[
+          ["RMK","Remark","Début de la section remarques"],
+          ["national","Variable selon le pays","Souvent hors norme OACI, gardé tel quel"]
+        ]}
+      };
       const CATEGORIES = { type:"Type", station:"Station", time:"Heure", wind:"Vent", visibility:"Visibilité", weather:"Temps", cloud:"Nuages", temperature:"Température", pressure:"Pression", trend:"Tendance", runway:"Piste", remark:"Remarque", unknown:"À vérifier" };
       const ICONS = { wind:"↗", visibility:"◉", cloud:"☁", pressure:"◌", station:"⌖", temperature:"℃", time:"◷" };
       const els = {
@@ -849,7 +953,7 @@
           const nextToken = tokens[index + 1];
           if (inRemarks) row = makeRow(index, token, "remark", "Élément de remarque.", "Après RMK, les groupes sont gardés tels quels pour ne pas sur-interpréter.");
           else if (token === "RMK") { inRemarks = true; row = makeRow(index, token, "remark", "Début des remarques.", "Les groupes suivants sont des remarques locales ou nationales."); }
-          else if (token === "METAR" || token === "SPECI") row = makeRow(index, token, "type", token === "METAR" ? "Observation météorologique régulière d'aérodrome." : "Observation spéciale d'aérodrome.", "Le message décrit les conditions observées à un instant précis.");
+          else if (token === "METAR" || token === "SPECI") row = makeRow(index, token, "type", token === "METAR" ? "Observation météorologique régulière d'aérodrome." : "Observation spéciale d'aérodrome.", token + " = « " + ABBR_EN[token] + " ». " + (token === "METAR" ? "Diffusé à intervalle régulier (souvent toutes les 30 min)." : "Émis hors heure quand les conditions changent vite."));
           else if (!summary.station && /^[A-Z]{4}$/.test(token)) { summary.station = token; const ap = getAirportInfo(token); const stationName = ap && ap.name ? ap.name + " (" + token + ")." : "Station OACI " + token + "."; row = makeRow(index, token, "station", stationName, "Identifiant de l'aérodrome sur quatre lettres."); }
           else if (/^\d{6}Z$/.test(token)) { row = decodeTime(index, token); summary.observedAtLocal = row.local; }
           else if (/^(\d{3}|VRB)\d{2,3}(G\d{2,3})?(KT|MPS|KMH)$/.test(token)) row = decodeWind(index, token, nextToken);
@@ -861,7 +965,7 @@
           else if (/^(FEW|SCT|BKN|OVC|NSC|NCD|VV)(\d{3}|\/\/\/)?(CB|TCU)?$/.test(token)) row = decodeCloud(index, token);
           else if (/^(M?\d{2})\/(M?\d{2}|\/\/)$/.test(token)) row = decodeTemperature(index, token);
           else if (/^Q\d{4}$/.test(token) || /^A\d{4}$/.test(token)) row = decodePressure(index, token);
-          else if (TRENDS[token]) row = makeRow(index, token, "trend", TRENDS[token], "Indique une tendance prévue dans les deux heures suivant l'observation.");
+          else if (TRENDS[token]) row = makeRow(index, token, "trend", TRENDS[token], (ABBR_EN[token] ? token + " = « " + ABBR_EN[token] + " ». " : "") + "Indique une tendance prévue dans les deux heures suivant l'observation.");
           else if (/^(AUTO|COR)$/.test(token)) row = makeRow(index, token, "type", token === "AUTO" ? "Observation automatique." : "Message corrigé.", token === "AUTO" ? "Le message est produit automatiquement." : "Cette version corrige une observation transmise précédemment.");
           if (!row) { warnings.push("Groupe non reconnu: " + token); row = makeRow(index, token, "unknown", "Groupe non reconnu par ce décodeur.", "Conservé tel quel: certains pays ajoutent des groupes locaux."); row.warning = "Non reconnu"; }
           rows.push(row);
@@ -885,7 +989,11 @@
         const kt = unit === "KT" ? speed : unit === "KMH" ? speed / 1.852 : speed / 0.514444;
         const dirText = direction === "VRB" ? "variable" : direction + "° (" + cardinal(Number(direction)) + ")";
         const literal = direction === "000" && speed === 0 ? "Vent calme." : "Vent du " + dirText + " à " + speed + " " + unit + (gust ? " avec rafales à " + gust + " " + unit : "") + ".";
-        const row = makeRow(index, token, "wind", literal, "Le vent vient de cette direction, il ne va pas vers elle. " + fmt(kt,0) + " kt = " + fmt(kt*1.852,0) + " km/h = " + fmt(kt*0.514444,1) + " m/s.");
+        const notes = ["Le vent vient de cette direction, il ne va pas vers elle."];
+        if (direction === "VRB") notes.push("VRB = « Variable » : direction indéterminée, typique d'un vent faible.");
+        if (gust) notes.push("Le G de " + token + " signifie « Gust » (rafale) : pointe à " + gust + " " + unit + ".");
+        notes.push(unit + " = « " + (ABBR_EN[unit] || unit) + " ». " + fmt(kt,0) + " kt = " + fmt(kt*1.852,0) + " km/h = " + fmt(kt*0.514444,1) + " m/s.");
+        const row = makeRow(index, token, "wind", literal, notes.join(" "));
         row.visual = { directionDeg: direction === "VRB" ? null : Number(direction), speedKt: kt };
         if (nextToken && /^\d{3}V\d{3}$/.test(nextToken)) {
           row.visual.variableFrom = Number(nextToken.slice(0,3));
@@ -902,27 +1010,33 @@
         const intensity = token.startsWith("-") ? "faible " : token.startsWith("+") ? "forte " : token.startsWith("VC") ? "à proximité " : "";
         const body = token.replace(/^[-+]/, "").replace(/^VC/, "");
         const parts = body.match(/.{1,2}/g) || [];
-        return makeRow(index, token, "weather", "Temps présent: " + intensity + parts.map(p => DESCRIPTORS[p] || PHENOMENA[p] || p).join(" ") + ".", "Les signes - et + indiquent l'intensité; VC signifie au voisinage.");
+        const literal = "Temps présent: " + intensity + parts.map(p => DESCRIPTORS[p] || PHENOMENA[p] || p).join(" ") + ".";
+        const intensityNote = token.startsWith("-") ? "« - » = intensité faible. " : token.startsWith("+") ? "« + » = intensité forte. " : token.startsWith("VC") ? "« VC » = vicinity (au voisinage, entre 8 et 16 km de l'aérodrome). " : "Aucun signe = intensité modérée. ";
+        const decoded = parts.map(p => p + " = « " + (ABBR_EN[p] || "?") + " » (" + (DESCRIPTORS[p] || PHENOMENA[p] || "?") + ")").join(" ; ");
+        return makeRow(index, token, "weather", literal, intensityNote + "On lit chaque sigle par paire : " + decoded + ".");
       }
       function decodeCloud(index, token) {
         const m = token.match(/^(FEW|SCT|BKN|OVC|NSC|NCD|VV)(\d{3}|\/\/\/)?(CB|TCU)?$/);
         const cover = CLOUDS[m[1]] || m[1], height = m[2], type = m[3] ? " avec " + m[3] : "";
-        if (!height || height === "///") return makeRow(index, token, "cloud", cover + ".", "Aucune hauteur exploitable n'est fournie pour ce groupe.");
+        const sigle = ABBR_EN[m[1]] ? m[1] + " = « " + ABBR_EN[m[1]] + " » : " + cover + (CLOUD_OCTAS[m[1]] ? " (" + CLOUD_OCTAS[m[1]] + ")" : "") + ". " : "";
+        const typeNote = m[3] ? " " + m[3] + " = « " + ABBR_EN[m[3]] + " » : " + (CLOUDTYPE_FR[m[3]] || "") + "." : "";
+        if (!height || height === "///") return makeRow(index, token, "cloud", cover + type + ".", sigle + "Aucune hauteur exploitable n'est fournie pour ce groupe." + typeNote);
         const feet = Number(height) * 100;
-        return makeRow(index, token, "cloud", cover + " à " + fmt(feet,0) + " ft" + type + ".", fmt(feet,0) + " ft = " + fmt(feet*0.3048,0) + " m.");
+        return makeRow(index, token, "cloud", cover + " à " + fmt(feet,0) + " ft" + type + ".", sigle + "Les 3 chiffres sont des centaines de pieds : base à " + fmt(feet,0) + " ft = " + fmt(feet*0.3048,0) + " m au-dessus de l'aérodrome." + typeNote);
       }
       function decodeTemperature(index, token) {
         const [rawTemp, rawDew] = token.split("/");
         const t = signed(rawTemp), d = rawDew === "//" ? null : signed(rawDew);
-        return makeRow(index, token, "temperature", "Température " + t + " °C, point de rosée " + (d === null ? "non renseigné" : d + " °C") + ".", d === null ? "La température est déjà en unité SI." : "Écart température-point de rosée: " + (t - d) + " °C.");
+        const mNote = token.includes("M") ? " Le préfixe M signifie « Minus » : la valeur est négative (ex. M05 = -5 °C)." : "";
+        return makeRow(index, token, "temperature", "Température " + t + " °C, point de rosée " + (d === null ? "non renseigné" : d + " °C") + ".", (d === null ? "La température est déjà en unité SI." : "Écart température / point de rosée : " + (t - d) + " °C — plus il est faible, plus l'air est humide (risque de brouillard).") + mNote);
       }
       function decodePressure(index, token) {
         if (token.startsWith("Q")) {
           const hpa = Number(token.slice(1));
-          return makeRow(index, token, "pressure", "QNH " + hpa + " hPa.", hpa + " hPa = " + fmt(hpa*100,0) + " Pa en unité SI.");
+          return makeRow(index, token, "pressure", "QNH " + hpa + " hPa.", "Le Q introduit le QNH (calage pour lire l'altitude au sol) en hectopascals, usage européen. " + hpa + " hPa = " + fmt(hpa*100,0) + " Pa en unité SI.");
         }
         const inches = Number(token.slice(1,3) + "." + token.slice(3)), hpa = inches * 33.8639;
-        return makeRow(index, token, "pressure", "Altimeter " + fmt(inches,2) + " inHg.", "Équivalent QNH: " + fmt(hpa,0) + " hPa.");
+        return makeRow(index, token, "pressure", "Altimeter " + fmt(inches,2) + " inHg.", "Le A introduit l'« Altimeter setting » en pouces de mercure (inHg), usage nord-américain. Équivalent QNH : " + fmt(hpa,0) + " hPa.");
       }
       function isWeather(token) {
         const body = token.replace(/^[-+]/, "").replace(/^VC/, "");
@@ -941,7 +1055,31 @@
       }
       function rowHtml(row) {
         const id = anchorId(row);
-        return '<tr id="' + esc(id) + '" class="detail-target ' + (row.warning ? "warning-row" : "") + '"><td data-label="Groupe"><div class="token-cell"><span class="category-icon">' + (ICONS[row.category] || "◌") + '</span><div><code>' + esc(row.token) + '</code><span>' + CATEGORIES[row.category] + '</span></div></div></td><td data-label="Lecture littérale">' + esc(row.literal) + '</td><td data-label="Explication pédagogique"><div class="pedagogy-cell">' + compassHtml(row.visual) + '<p>' + esc(row.pedagogical) + '</p></div></td></tr>';
+        return '<tr id="' + esc(id) + '" class="detail-target ' + (row.warning ? "warning-row" : "") + '"><td data-label="Groupe"><div class="token-cell"><span class="category-icon">' + (ICONS[row.category] || "◌") + '</span><div><code>' + esc(row.token) + '</code><span>' + CATEGORIES[row.category] + '</span></div></div></td><td data-label="Lecture littérale">' + esc(row.literal) + '</td><td data-label="Explication pédagogique"><div class="pedagogy-cell">' + compassHtml(row.visual) + '<div class="pedagogy-text"><p>' + esc(row.pedagogical) + '</p>' + learnHtml(row) + '</div></div></td></tr>';
+      }
+      function learnHtml(row) {
+        if (row.category === "weather") return accordionHtml("Tous les codes de temps présent", weatherReferenceHtml(row));
+        const ref = REFERENCE[row.category];
+        if (!ref) return "";
+        const body = ref.items.map(([code, en, note]) => learnItemHtml(row, code, en, note)).join("");
+        return accordionHtml("Autres valeurs possibles · " + ref.label, body);
+      }
+      function learnItemHtml(row, code, en, note) {
+        const active = /^[A-Z0-9]+$/.test(code) && row.token.toUpperCase().includes(code);
+        return '<div class="learn-item' + (active ? " active" : "") + '"><code>' + esc(code) + '</code><div><strong>' + esc(en) + '</strong>' + (note ? '<span>' + esc(note) + '</span>' : '') + '</div></div>';
+      }
+      function accordionHtml(title, inner) {
+        return '<details class="learn"><summary>📚 ' + esc(title) + '</summary><div class="learn-body">' + inner + '</div></details>';
+      }
+      function weatherReferenceHtml(row) {
+        const upper = row.token.toUpperCase();
+        const intensity = '<div class="learn-section">Intensité / proximité</div>' + [["-", "faible"], ["+", "forte"], ["VC", "à proximité (vicinity)"]]
+          .map(([code, fr]) => '<div class="learn-item' + (upper.startsWith(code) ? " active" : "") + '"><code>' + esc(code) + '</code><div><strong>' + esc(fr) + '</strong></div></div>').join("");
+        const group = (label, codes, dict) => '<div class="learn-section">' + label + '</div>' + codes
+          .map((code) => '<div class="learn-item' + (upper.includes(code) ? " active" : "") + '"><code>' + esc(code) + '</code><div><strong>' + esc(ABBR_EN[code] || "") + '</strong><span>' + esc(dict[code] || "") + '</span></div></div>').join("");
+        return intensity
+          + group("Descripteurs", ["MI", "BC", "PR", "DR", "BL", "SH", "TS", "FZ"], DESCRIPTORS)
+          + group("Phénomènes", ["DZ", "RA", "SN", "SG", "PL", "GR", "GS", "IC", "UP", "FG", "BR", "HZ", "FU", "VA", "DU", "SA", "SQ", "FC", "SS", "DS"], PHENOMENA);
       }
       function anchorId(row) {
         return 'detail-' + row.id.replace(/[^a-zA-Z0-9_-]/g, '-');
