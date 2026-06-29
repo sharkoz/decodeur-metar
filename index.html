@@ -112,11 +112,47 @@
       }
       .favorite-toggle:hover, .favorite-toggle:focus-visible { background: var(--favorite-bg); color: var(--amber); outline: none; }
       .favorite-toggle.active { color: var(--amber); }
+      .geoloc-toggle {
+        position: absolute; right: 44px; width: 34px; height: 34px; border: 0; border-radius: 8px;
+        background: transparent; color: var(--muted); cursor: pointer; display: grid; place-items: center;
+      }
+      .geoloc-toggle:hover, .geoloc-toggle:focus-visible { background: var(--icon-bg); color: var(--accent); outline: none; }
+      .geoloc-toggle:disabled { cursor: wait; }
+      .geoloc-toggle.loading { color: var(--accent); }
+      .geoloc-toggle svg { width: 18px; height: 18px; }
+      .geoloc-toggle.loading svg { animation: spin 900ms linear infinite; }
+      .geo-suggestions {
+        display: none; flex-direction: column; gap: 3px; border: 1px solid var(--border); border-radius: 8px;
+        background: var(--surface); padding: 8px; box-shadow: 0 10px 28px rgba(31, 55, 92, 0.06);
+      }
+      .geo-suggestions.visible { display: flex; }
+      .geo-suggestions-head { color: var(--muted); font-size: 0.74rem; font-weight: 900; text-transform: uppercase; padding: 2px 6px 6px; }
+      .geo-item {
+        display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%;
+        border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--ink);
+        padding: 8px 10px; text-align: left; cursor: pointer;
+      }
+      .geo-item:hover:not(:disabled), .geo-item:focus-visible:not(:disabled), .geo-item.active:not(:disabled) { border-color: var(--accent); background: var(--surface-strong); outline: none; }
+      .geo-item-main { font-size: 0.9rem; overflow-wrap: anywhere; }
+      .geo-item-main strong { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; color: var(--accent); }
+      .geo-iata {
+        margin-left: 4px; border-radius: 999px; background: var(--icon-bg); color: var(--chip-ink);
+        padding: 1px 7px; font-size: 0.68rem; font-weight: 900;
+      }
+      .geo-item-meta { display: flex; align-items: center; gap: 12px; flex: 0 0 auto; }
+      .geo-dist { color: var(--muted); font-size: 0.8rem; font-weight: 700; white-space: nowrap; }
+      .geo-state { font-size: 0.74rem; font-weight: 900; min-width: 58px; text-align: right; white-space: nowrap; }
+      .geo-item.testing { opacity: 0.85; }
+      .geo-item.testing .geo-state { color: var(--muted); }
+      .geo-item.available { border-color: rgba(31, 122, 76, 0.45); }
+      .geo-item.available .geo-state { color: var(--success); }
+      .geo-item.unavailable { opacity: 0.42; cursor: not-allowed; }
+      .geo-item.unavailable .geo-state { color: var(--muted); }
       input, textarea {
         width: 100%; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-strong);
         color: var(--ink); outline: none; transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
       }
-      input { min-height: 46px; padding: 0 48px 0 42px; }
+      input { min-height: 46px; padding: 0 84px 0 42px; }
       textarea {
         display: block; margin-top: 8px; min-height: 118px; resize: vertical; padding: 15px;
         font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; font-size: 0.98rem; line-height: 1.55;
@@ -191,26 +227,24 @@
       .token-cell span:last-child { display: block; margin-top: 2px; color: var(--muted); font-size: 0.82rem; font-weight: 700; }
       .pedagogy-cell { display: flex; align-items: center; gap: 14px; }
       .pedagogy-cell p { margin: 0; }
-      .mini-compass { flex: 0 0 auto; width: 86px; display: grid; gap: 5px; justify-items: center; }
+      .mini-compass { flex: 0 0 auto; width: 100px; display: grid; gap: 6px; justify-items: center; }
       .compass-face {
-        --direction: 0deg; position: relative; width: 66px; height: 66px; border: 1px solid var(--compass-border); border-radius: 50%;
+        position: relative; width: 66px; height: 66px; margin: 16px; border: 1px solid var(--compass-border); border-radius: 50%;
         background: var(--compass-bg);
-        color: var(--compass-ink); font-size: 0.62rem; font-weight: 900;
+        color: var(--compass-ink); font-size: 0.68rem; font-weight: 900;
       }
-      .north,.east,.south,.west { position: absolute; }
-      .north { top: 3px; left: 50%; transform: translateX(-50%); }
-      .east { right: 5px; top: 50%; transform: translateY(-50%); }
-      .south { bottom: 2px; left: 50%; transform: translateX(-50%); }
-      .west { left: 5px; top: 50%; transform: translateY(-50%); }
-      .needle {
-        position: absolute; left: 50%; top: 50%; width: 3px; height: 25px; border-radius: 999px; background: var(--amber);
-        transform-origin: 50% 100%; transform: translate(-50%, -100%) rotate(var(--direction));
-      }
-      .needle::before {
-        content: ""; position: absolute; left: 50%; top: -5px; width: 9px; height: 9px; border-radius: 2px 8px 8px 8px;
-        background: var(--amber); transform: translateX(-50%) rotate(45deg);
-      }
+      .north,.east,.south,.west { position: absolute; color: var(--compass-ink); }
+      .north { top: -15px; left: 50%; transform: translateX(-50%); }
+      .east { right: -14px; top: 50%; transform: translateY(-50%); }
+      .south { bottom: -15px; left: 50%; transform: translateX(-50%); }
+      .west { left: -14px; top: 50%; transform: translateY(-50%); }
+      .wind-barb { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--amber); overflow: visible; }
+      .wind-arc { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--accent); }
       .compass-face strong { position: absolute; inset: 0; display: grid; place-items: center; color: var(--accent); font-size: 0.74rem; }
+      .dir-arrow { display: inline-block; color: var(--accent); font-weight: 900; transform: rotate(var(--bearing, 0deg)); }
+      .geo-dist .dir-arrow { color: var(--accent); }
+      .coord-link { color: var(--accent); font-weight: 800; text-decoration: none; overflow-wrap: anywhere; }
+      .coord-link:hover, .coord-link:focus-visible { text-decoration: underline; outline: none; }
       .speed-chip { border-radius: 999px; background: var(--amber-soft); color: var(--amber); padding: 2px 8px; font-size: 0.72rem; font-weight: 900; }
       .empty-state {
         min-height: 180px; border: 1px dashed var(--border); border-radius: 8px; display: grid; place-items: center;
@@ -269,12 +303,13 @@
           <div class="search-row">
             <div class="input-with-icon">
               <span class="search-icon">⌕</span>
-              <input id="airportQuery" list="airportOptions" value="LFPG" placeholder="LFPG, Bordeaux, Paris..." autocomplete="off" />
+              <input id="airportQuery" placeholder="LFPG, Bordeaux, Paris..." autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="geoSuggestions" />
+              <button class="geoloc-toggle" id="geolocToggle" type="button" aria-label="Me localiser" title="Trouver l'aérodrome le plus proche"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path><circle cx="12" cy="12" r="8.2"></circle></svg></button>
               <button class="favorite-toggle" id="favoriteToggle" type="button" aria-label="Ajouter aux favoris" title="Ajouter aux favoris">☆</button>
-              <datalist id="airportOptions"></datalist>
             </div>
             <button class="primary-button" id="fetchButton" type="submit">⌕ Récupérer</button>
           </div>
+          <div class="geo-suggestions" id="geoSuggestions" aria-label="Aérodromes les plus proches"></div>
           <p class="status-line" id="statusLine">Collez un METAR ou récupérez une observation par code OACI.</p>
         </form>
         <label for="metarInput">Coller un METAR</label>
@@ -302,6 +337,12 @@
       let airportsByIcao = new Map();
       let airportSearchIndex = [];
       let favoriteIcaos = loadFavorites();
+      let activeSuggestion = -1;
+      let userPosition = null;
+      let currentIcao = "";
+      let suggestionToken = 0;
+      let suggestionTestTimer = null;
+      const metarAvailability = new Map();
       const DESCRIPTORS = { BC:"bancs", BL:"chasse elevee", DR:"chasse basse", FZ:"se congelant", MI:"mince", PR:"partiel", SH:"averses", TS:"orage" };
       const PHENOMENA = { BR:"brume", DS:"tempete de poussiere", DU:"poussiere", DZ:"bruine", FC:"trombe ou tornade", FG:"brouillard", FU:"fumee", GR:"grele", GS:"gresil", HZ:"brume seche", IC:"cristaux de glace", PL:"granules de glace", RA:"pluie", SA:"sable", SG:"neige en grains", SN:"neige", SQ:"grain", SS:"tempete de sable", UP:"precipitation inconnue", VA:"cendres volcaniques" };
       const CLOUDS = { FEW:"quelques nuages", SCT:"nuages epars", BKN:"ciel fragmente", OVC:"ciel couvert", NSC:"aucun nuage significatif", NCD:"aucun nuage detecte", VV:"visibilite verticale" };
@@ -310,7 +351,8 @@
       const ICONS = { wind:"↗", visibility:"◉", cloud:"☁", pressure:"◌", station:"⌖", temperature:"℃", time:"◷" };
       const els = {
         timezoneChip: document.getElementById("timezoneChip"), form: document.getElementById("searchForm"), query: document.getElementById("airportQuery"),
-        options: document.getElementById("airportOptions"), favoriteToggle: document.getElementById("favoriteToggle"), favoritesBar: document.getElementById("favoritesBar"),
+        favoriteToggle: document.getElementById("favoriteToggle"), favoritesBar: document.getElementById("favoritesBar"),
+        geolocToggle: document.getElementById("geolocToggle"), geoSuggestions: document.getElementById("geoSuggestions"),
         button: document.getElementById("fetchButton"), status: document.getElementById("statusLine"),
         input: document.getElementById("metarInput"), rowCount: document.getElementById("rowCount"), warningCount: document.getElementById("warningCount"),
         localTime: document.getElementById("localTime"), normalized: document.getElementById("normalizedMetar"), table: document.getElementById("tableFrame"),
@@ -318,18 +360,32 @@
       };
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       const initialIcao = getIcaoFromUrl();
+      currentIcao = initialIcao;
       applyTheme(getStoredTheme());
       els.timezoneChip.textContent = "UTC → " + timeZone;
       if (initialIcao) els.query.value = initialIcao;
       renderFavorites();
       updateFavoriteControls();
       loadAirportData().then(() => {
-        updateAirportSuggestions(els.query.value);
         if (initialIcao) fetchAndRenderMetar();
+        else geolocateNearest(true);
       });
       els.query.addEventListener("input", () => {
-        updateAirportSuggestions(els.query.value);
         updateFavoriteControls();
+        showSuggestions(els.query.value);
+      });
+      els.query.addEventListener("focus", () => showSuggestions(els.query.value));
+      els.query.addEventListener("keydown", onSuggestionKeydown);
+      els.geolocToggle.addEventListener("click", () => geolocateNearest(!currentIcao));
+      els.geoSuggestions.addEventListener("click", (event) => {
+        const item = event.target.closest(".geo-item");
+        if (!item || item.disabled) return;
+        els.query.value = item.dataset.icao;
+        updateFavoriteControls(item.dataset.icao);
+        fetchAndRenderMetar();
+      });
+      document.addEventListener("click", (event) => {
+        if (!event.target.closest(".input-with-icon") && !event.target.closest("#geoSuggestions")) hideSuggestions();
       });
       els.favoriteToggle.addEventListener("click", () => toggleFavorite(resolveFavoriteIcao()));
       els.favoritesBar.addEventListener("click", (event) => {
@@ -347,23 +403,28 @@
         await fetchAndRenderMetar();
       });
       async function fetchAndRenderMetar() {
+        hideSuggestions();
         setStatus("loading", "Récupération du METAR en cours...");
         els.button.disabled = true;
         try {
-          const result = await fetchMetar(els.query.value);
-          els.input.value = result.raw;
-          els.query.value = result.icao;
-          updateUrlIcao(result.icao);
-          updateAirportSuggestions(result.icao);
-          updateFavoriteControls(result.icao);
-          renderAirportInfo(result.airport || getAirportInfo(result.icao));
-          setStatus("success", (result.airportLabel || result.icao) + " mis à jour depuis " + result.source + (result.airport ? " + airports.json" : "") + ".");
-          render();
+          applyMetarResult(await fetchMetar(els.query.value));
         } catch (error) {
           setStatus("error", error.message || "La récupération a échoué.");
         } finally {
           els.button.disabled = false;
         }
+      }
+      function applyMetarResult(result) {
+        els.input.value = result.raw;
+        els.query.value = result.icao;
+        currentIcao = result.icao;
+        metarAvailability.set(result.icao, true);
+        updateUrlIcao(result.icao);
+        updateFavoriteControls(result.icao);
+        const airport = result.airport || getAirportInfo(result.icao);
+        renderAirportInfo(airport);
+        setStatus("success", (result.airportLabel || result.icao) + " mis à jour.");
+        render();
       }
       function getIcaoFromUrl() {
         const params = new URLSearchParams(window.location.search);
@@ -454,22 +515,133 @@
         await ensureAirportData();
         const resolved = resolveIcao(query);
         if (!resolved) throw new Error("Saisissez un code OACI à 4 lettres ou un aérodrome connu de la liste.");
+        const found = await fetchMetarRaw(resolved.icao);
+        if (!found) throw new Error("Impossible de récupérer le METAR pour " + resolved.icao + ".");
+        return { ...resolved, raw: found.raw, source: found.source, airport: getAirportInfo(resolved.icao) };
+      }
+      async function fetchMetarRaw(icao) {
         const sources = [
-          { source: "metar.vatsim.net", url: "https://metar.vatsim.net/" + encodeURIComponent(resolved.icao) },
-          { source: "MET Norway tafmetar", url: "https://api.met.no/weatherapi/tafmetar/1.0/metar.txt?icao=" + encodeURIComponent(resolved.icao) }
+          { source: "metar.vatsim.net", url: "https://metar.vatsim.net/" + encodeURIComponent(icao) },
+          { source: "MET Norway tafmetar", url: "https://api.met.no/weatherapi/tafmetar/1.0/metar.txt?icao=" + encodeURIComponent(icao) }
         ];
-        let lastError = null;
         for (const item of sources) {
           try {
             const response = await fetch(item.url, { headers: { Accept: "text/plain" } });
-            if (!response.ok) throw new Error("HTTP " + response.status);
-            const raw = latestTextMetar(await response.text(), resolved.icao);
-            if (raw) return { ...resolved, raw, source: item.source, airport: getAirportInfo(resolved.icao) };
-          } catch (error) {
-            lastError = error;
+            if (!response.ok) continue;
+            const raw = latestTextMetar(await response.text(), icao);
+            if (raw) return { raw, source: item.source };
+          } catch (_) {
+            /* essaie la source suivante */
           }
         }
-        throw new Error("Impossible de récupérer le METAR. " + (lastError ? lastError.message : ""));
+        return null;
+      }
+      async function geolocateNearest(autoSelect) {
+        if (!("geolocation" in navigator)) {
+          setStatus("error", "La géolocalisation n'est pas disponible sur cet appareil.");
+          return;
+        }
+        await ensureAirportData();
+        setStatus("loading", "Localisation en cours...");
+        els.geolocToggle.disabled = true;
+        els.geolocToggle.classList.add("loading");
+        const release = () => { els.geolocToggle.disabled = false; els.geolocToggle.classList.remove("loading"); };
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            try {
+              userPosition = { lat: position.coords.latitude, lon: position.coords.longitude };
+              const candidates = nearestAirports(userPosition.lat, userPosition.lon, 12);
+              if (!candidates.length) { setStatus("error", "Aucun aérodrome trouvé à proximité."); return; }
+              const token = renderSuggestions(candidates, "Aérodromes les plus proches");
+              if (autoSelect) {
+                await loadFirstAvailable(candidates);
+              } else {
+                setStatus("success", "Aérodromes proches proposés. Choisissez-en un dans la liste.");
+                testTopAvailability(candidates, token, candidates.length);
+              }
+            } finally {
+              release();
+            }
+          },
+          (error) => {
+            release();
+            setStatus("error", error.code === error.PERMISSION_DENIED
+              ? "Géolocalisation refusée. Saisissez un code OACI ou un aérodrome."
+              : "Localisation impossible. Saisissez un code OACI ou un aérodrome.");
+          },
+          { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+        );
+      }
+      function nearestAirports(lat, lon, count) {
+        return airportSearchIndex
+          .map(({ airport }) => airport)
+          .filter((airport) => Number.isFinite(Number(airport.lat)) && Number.isFinite(Number(airport.lon)))
+          .map((airport) => ({ airport, distance: distanceKm(lat, lon, Number(airport.lat), Number(airport.lon)) }))
+          .sort((a, b) => a.distance - b.distance)
+          .slice(0, count);
+      }
+      function distanceKm(lat1, lon1, lat2, lon2) {
+        const toRad = (deg) => (deg * Math.PI) / 180;
+        const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+        const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+        return 2 * 6371 * Math.asin(Math.sqrt(a));
+      }
+      function bearingDeg(lat1, lon1, lat2, lon2) {
+        const toRad = (deg) => (deg * Math.PI) / 180;
+        const p1 = toRad(lat1), p2 = toRad(lat2), dLon = toRad(lon2 - lon1);
+        const y = Math.sin(dLon) * Math.cos(p2);
+        const x = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dLon);
+        return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+      }
+      function bearingFromUser(airport) {
+        if (!userPosition || !Number.isFinite(Number(airport.lat)) || !Number.isFinite(Number(airport.lon))) return null;
+        return bearingDeg(userPosition.lat, userPosition.lon, Number(airport.lat), Number(airport.lon));
+      }
+      function directionArrowHtml(bearing) {
+        const deg = Math.round(bearing);
+        return '<span class="dir-arrow" style="--bearing:' + deg + 'deg" title="Cap ' + deg + '° vers ' + cardinal(bearing) + '" aria-hidden="true">↑</span>';
+      }
+      function mapUrl(lat, lon) {
+        return "https://www.openstreetmap.org/?mlat=" + lat + "&mlon=" + lon + "#map=11/" + lat + "/" + lon;
+      }
+      function setGeoItemState(icao, state) {
+        const item = els.geoSuggestions.querySelector('.geo-item[data-icao="' + icao + '"]');
+        if (!item) return;
+        item.classList.remove("testing", "available", "unavailable");
+        item.classList.add(state);
+        item.disabled = state === "unavailable";
+        const stateEl = item.querySelector(".geo-state");
+        stateEl.textContent = state === "testing" ? "test…" : state === "available" ? "✓ dispo" : "indispo";
+      }
+      async function loadFirstAvailable(candidates) {
+        for (const { airport } of candidates) {
+          setGeoItemState(airport.icao, "testing");
+          setStatus("loading", "Test de " + airport.icao + " (" + (airport.city || airport.name || "") + ")...");
+          const found = await fetchMetarRaw(airport.icao);
+          metarAvailability.set(airport.icao, !!found);
+          if (found) {
+            setGeoItemState(airport.icao, "available");
+            applyMetarResult({ icao: airport.icao, raw: found.raw, source: found.source, airport, airportLabel: airport.name ? airport.name + " (" + airport.icao + ")" : airport.icao });
+            return;
+          }
+          setGeoItemState(airport.icao, "unavailable");
+        }
+        setStatus("error", "Aucun aérodrome proche ne fournit de METAR pour le moment.");
+      }
+      function testTopAvailability(items, token, count) {
+        items.slice(0, count).forEach(({ airport }) => {
+          const icao = airport.icao;
+          const cached = metarAvailability.get(icao);
+          if (cached !== undefined) {
+            if (token === suggestionToken) setGeoItemState(icao, cached ? "available" : "unavailable");
+            return;
+          }
+          if (token === suggestionToken) setGeoItemState(icao, "testing");
+          fetchMetarRaw(icao).then((found) => {
+            metarAvailability.set(icao, !!found);
+            if (token === suggestionToken) setGeoItemState(icao, found ? "available" : "unavailable");
+          });
+        });
       }
       async function loadAirportData() {
         if (airportsLoadPromise) return airportsLoadPromise;
@@ -492,7 +664,6 @@
                 };
               });
             airportsLoaded = true;
-            updateAirportSuggestions(els.query.value);
             renderFavorites();
             updateFavoriteControls();
             return airportsByIcao;
@@ -527,13 +698,77 @@
       function getAirportInfo(icao) {
         return airportsByIcao.get(String(icao).toUpperCase()) || null;
       }
-      function updateAirportSuggestions(query) {
+      function showSuggestions(query) {
         const normalized = normalizeSearch(query);
-        const matches = airportSearchIndex
-          .filter(({ airport, search }) => normalized ? search.includes(normalized) : airport.icao.startsWith("LF"))
-          .sort((a, b) => scoreAirportMatch(a.airport, normalized) - scoreAirportMatch(b.airport, normalized))
-          .slice(0, 60);
-        els.options.innerHTML = matches.map(({ airport }) => '<option value="' + esc(airport.icao) + '">' + esc([airport.city, airport.name, airport.iata].filter(Boolean).join(" - ")) + '</option>').join("");
+        if (!normalized) { hideSuggestions(); return; }
+        const items = airportSearchIndex
+          .filter(({ search }) => search.includes(normalized))
+          .map(({ airport }) => ({ airport, distance: distanceFromUser(airport) }))
+          .sort((a, b) => {
+            if (a.distance !== undefined && b.distance !== undefined) return a.distance - b.distance;
+            if (a.distance !== undefined) return -1;
+            if (b.distance !== undefined) return 1;
+            return scoreAirportMatch(a.airport, normalized) - scoreAirportMatch(b.airport, normalized);
+          })
+          .slice(0, 8);
+        const token = renderSuggestions(items, "Suggestions");
+        clearTimeout(suggestionTestTimer);
+        if (token) suggestionTestTimer = setTimeout(() => testTopAvailability(items, token, items.length), 300);
+      }
+      function distanceFromUser(airport) {
+        if (!userPosition || !Number.isFinite(Number(airport.lat)) || !Number.isFinite(Number(airport.lon))) return undefined;
+        return distanceKm(userPosition.lat, userPosition.lon, Number(airport.lat), Number(airport.lon));
+      }
+      function renderSuggestions(items, headLabel) {
+        activeSuggestion = -1;
+        if (!items.length) { hideSuggestions(); return 0; }
+        const token = ++suggestionToken;
+        els.geoSuggestions.innerHTML = '<div class="geo-suggestions-head">' + esc(headLabel) + '</div>' + items.map(({ airport, distance }) => {
+          const label = [airport.city, airport.name].filter(Boolean).join(" — ") || airport.icao;
+          const iata = airport.iata ? ' <span class="geo-iata">' + esc(airport.iata) + '</span>' : "";
+          const bearing = distance !== undefined ? bearingFromUser(airport) : null;
+          const distHtml = distance !== undefined
+            ? '<span class="geo-dist">' + fmt(distance, 0) + ' km' + (bearing !== null ? ' ' + directionArrowHtml(bearing) : '') + '</span>'
+            : '';
+          return '<button class="geo-item" type="button" role="option" data-icao="' + esc(airport.icao) + '">'
+            + '<span class="geo-item-main"><strong>' + esc(airport.icao) + '</strong> · ' + esc(label) + iata + '</span>'
+            + '<span class="geo-item-meta">'
+              + distHtml
+              + '<span class="geo-state"></span></span>'
+          + '</button>';
+        }).join("");
+        els.geoSuggestions.classList.add("visible");
+        els.query.setAttribute("aria-expanded", "true");
+        return token;
+      }
+      function hideSuggestions() {
+        clearTimeout(suggestionTestTimer);
+        suggestionToken++;
+        els.geoSuggestions.classList.remove("visible");
+        els.geoSuggestions.innerHTML = "";
+        activeSuggestion = -1;
+        els.query.setAttribute("aria-expanded", "false");
+      }
+      function onSuggestionKeydown(event) {
+        const items = [...els.geoSuggestions.querySelectorAll(".geo-item:not(:disabled)")];
+        if (!els.geoSuggestions.classList.contains("visible") || !items.length) return;
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          activeSuggestion = (activeSuggestion + 1) % items.length;
+          highlightSuggestion(items);
+        } else if (event.key === "ArrowUp") {
+          event.preventDefault();
+          activeSuggestion = (activeSuggestion - 1 + items.length) % items.length;
+          highlightSuggestion(items);
+        } else if (event.key === "Enter") {
+          if (activeSuggestion >= 0 && items[activeSuggestion]) { event.preventDefault(); items[activeSuggestion].click(); }
+        } else if (event.key === "Escape") {
+          hideSuggestions();
+        }
+      }
+      function highlightSuggestion(items) {
+        items.forEach((item, index) => item.classList.toggle("active", index === activeSuggestion));
+        if (items[activeSuggestion]) items[activeSuggestion].scrollIntoView({ block: "nearest" });
       }
       function scoreAirportMatch(airport, normalized) {
         if (!normalized) return airport.icao.startsWith("LF") ? 0 : 10;
@@ -553,16 +788,23 @@
         const altitude = info.altitudeFt !== undefined || info.altitudeM !== undefined
           ? fmt(Number(info.altitudeFt), 0) + " ft / " + fmt(Number(info.altitudeM), 0) + " m"
           : "—";
-        const coordinates = info.lat !== undefined && info.lon !== undefined
-          ? Number(info.lat).toFixed(4) + ", " + Number(info.lon).toFixed(4)
+        const hasCoords = Number.isFinite(Number(info.lat)) && Number.isFinite(Number(info.lon));
+        const lat = hasCoords ? Number(info.lat) : null, lon = hasCoords ? Number(info.lon) : null;
+        const coordHtml = hasCoords
+          ? '<a class="coord-link" href="' + esc(mapUrl(lat, lon)) + '" target="_blank" rel="noopener noreferrer" title="Ouvrir la carte à ces coordonnées">' + lat.toFixed(4) + ", " + lon.toFixed(4) + ' ↗</a>'
           : "—";
+        const distance = distanceFromUser(info);
+        const bearing = bearingFromUser(info);
+        const distanceHtml = distance !== undefined ? fmt(distance, 0) + " km" : "—";
+        const directionHtml = bearing !== null ? directionArrowHtml(bearing) + " " + Math.round(bearing) + "° " + cardinal(bearing) : "—";
         const place = [info.city, info.state].filter(Boolean).join(", ") || "—";
         const items = [
-          ["OACI", info.icao], ["IATA", info.iata || "—"], ["Lieu", place], ["Pays", info.country || "—"],
-          ["Altitude", altitude], ["Latitude", info.lat !== undefined ? Number(info.lat).toFixed(5) : "—"],
-          ["Longitude", info.lon !== undefined ? Number(info.lon).toFixed(5) : "—"], ["Fuseau", info.timezone || "—"]
+          { l: "OACI", v: info.icao }, { l: "IATA", v: info.iata || "—" }, { l: "Lieu", v: place }, { l: "Pays", v: info.country || "—" },
+          { l: "Altitude", v: altitude }, { l: "Coordonnées", html: coordHtml },
+          { l: "Distance", html: distanceHtml }, { l: "Direction", html: directionHtml },
+          { l: "Fuseau", v: info.timezone || "—" }
         ];
-        els.airportInfo.innerHTML = '<h3>' + esc(info.name || info.icao) + '</h3><div class="airport-info-grid">' + items.map(([label, value]) => '<div class="airport-info-item"><span>' + esc(label) + '</span><strong>' + esc(value) + '</strong></div>').join("") + '</div>' + favoriteActionHtml(info.icao);
+        els.airportInfo.innerHTML = '<h3>' + esc(info.name || info.icao) + '</h3><div class="airport-info-grid">' + items.map((it) => '<div class="airport-info-item"><span>' + esc(it.l) + '</span><strong>' + (it.html !== undefined ? it.html : esc(it.v)) + '</strong></div>').join("") + '</div>' + favoriteActionHtml(info.icao);
         els.airportInfo.classList.add("visible");
       }
       function resolveIcao(query) {
@@ -608,10 +850,10 @@
           if (inRemarks) row = makeRow(index, token, "remark", "Élément de remarque.", "Après RMK, les groupes sont gardés tels quels pour ne pas sur-interpréter.");
           else if (token === "RMK") { inRemarks = true; row = makeRow(index, token, "remark", "Début des remarques.", "Les groupes suivants sont des remarques locales ou nationales."); }
           else if (token === "METAR" || token === "SPECI") row = makeRow(index, token, "type", token === "METAR" ? "Observation météorologique régulière d'aérodrome." : "Observation spéciale d'aérodrome.", "Le message décrit les conditions observées à un instant précis.");
-          else if (!summary.station && /^[A-Z]{4}$/.test(token)) { summary.station = token; row = makeRow(index, token, "station", "Station OACI " + token + ".", "Identifiant de l'aérodrome sur quatre lettres."); }
+          else if (!summary.station && /^[A-Z]{4}$/.test(token)) { summary.station = token; const ap = getAirportInfo(token); const stationName = ap && ap.name ? ap.name + " (" + token + ")." : "Station OACI " + token + "."; row = makeRow(index, token, "station", stationName, "Identifiant de l'aérodrome sur quatre lettres."); }
           else if (/^\d{6}Z$/.test(token)) { row = decodeTime(index, token); summary.observedAtLocal = row.local; }
           else if (/^(\d{3}|VRB)\d{2,3}(G\d{2,3})?(KT|MPS|KMH)$/.test(token)) row = decodeWind(index, token, nextToken);
-          else if (/^\d{3}V\d{3}$/.test(token)) row = makeRow(index, token, "wind", "Direction du vent variable de " + token.slice(0,3) + "° à " + token.slice(4,7) + "°.", "Ce groupe complète le vent moyen et indique un secteur de variation.");
+          else if (/^\d{3}V\d{3}$/.test(token)) { row = makeRow(index, token, "wind", "Direction du vent variable de " + token.slice(0,3) + "° à " + token.slice(4,7) + "°.", "Ce groupe complète le vent moyen et indique un secteur de variation."); row.visual = { directionDeg: null, variableFrom: Number(token.slice(0,3)), variableTo: Number(token.slice(4,7)) }; }
           else if (token === "CAVOK") row = makeRow(index, token, "visibility", "Ceiling And Visibility OK.", "Visibilité au moins 10 km, pas de nuage significatif bas, pas de temps significatif.");
           else if (/^\d{4}(NDV)?$/.test(token)) row = decodeVisibility(index, token);
           else if (/^R\d{2}[LCR]?\/[MP]?\d{4}(V[MP]?\d{4})?[UDN]?$/.test(token)) row = makeRow(index, token, "runway", "Portée visuelle de piste " + token + ".", "La RVR donne la distance visible le long de la piste.");
@@ -645,7 +887,11 @@
         const literal = direction === "000" && speed === 0 ? "Vent calme." : "Vent du " + dirText + " à " + speed + " " + unit + (gust ? " avec rafales à " + gust + " " + unit : "") + ".";
         const row = makeRow(index, token, "wind", literal, "Le vent vient de cette direction, il ne va pas vers elle. " + fmt(kt,0) + " kt = " + fmt(kt*1.852,0) + " km/h = " + fmt(kt*0.514444,1) + " m/s.");
         row.visual = { directionDeg: direction === "VRB" ? null : Number(direction), speedKt: kt };
-        if (nextToken && /^\d{3}V\d{3}$/.test(nextToken)) row.pedagogical += " Direction variable entre " + nextToken.slice(0,3) + "° et " + nextToken.slice(4,7) + "°.";
+        if (nextToken && /^\d{3}V\d{3}$/.test(nextToken)) {
+          row.visual.variableFrom = Number(nextToken.slice(0,3));
+          row.visual.variableTo = Number(nextToken.slice(4,7));
+          row.pedagogical += " Direction variable entre " + nextToken.slice(0,3) + "° et " + nextToken.slice(4,7) + "°.";
+        }
         return row;
       }
       function decodeVisibility(index, token) {
@@ -709,8 +955,54 @@
       }
       function compassHtml(visual) {
         if (!visual) return "";
-        if (visual.directionDeg === null) return '<div class="mini-compass"><div class="compass-face"><span class="north">N</span><span class="east">E</span><span class="south">S</span><span class="west">O</span><strong>VRB</strong></div><span class="speed-chip">variable</span></div>';
-        return '<div class="mini-compass"><div class="compass-face" style="--direction:' + visual.directionDeg + 'deg"><span class="north">N</span><span class="east">E</span><span class="south">S</span><span class="west">O</span><span class="needle"></span></div><span class="speed-chip">' + Math.round(visual.speedKt) + ' kt</span></div>';
+        const labels = '<span class="north">N</span><span class="east">E</span><span class="south">S</span><span class="west">O</span>';
+        const hasSector = visual.variableFrom != null && visual.variableTo != null;
+        const arc = hasSector ? sectorArcSvg(visual.variableFrom, visual.variableTo) : "";
+        let center, chip;
+        if (visual.directionDeg === null) {
+          if (hasSector) { center = ""; chip = visual.variableFrom + "°–" + visual.variableTo + "°"; }
+          else { center = '<strong>VRB</strong>'; chip = "VRB " + Math.round(visual.speedKt) + " kt"; }
+        } else {
+          center = windBarbSvg(visual.directionDeg, visual.speedKt);
+          chip = Math.round(visual.speedKt) + " kt";
+        }
+        return '<div class="mini-compass"><div class="compass-face">' + labels + arc + center + '</div><span class="speed-chip">' + chip + '</span></div>';
+      }
+      function sectorArcSvg(from, to) {
+        const R = 27;
+        const large = ((to - from + 360) % 360) > 180 ? 1 : 0;
+        const polar = (bearing) => {
+          const rad = bearing * Math.PI / 180;
+          return (33 + R * Math.sin(rad)).toFixed(2) + " " + (33 - R * Math.cos(rad)).toFixed(2);
+        };
+        return '<svg class="wind-arc" viewBox="0 0 66 66" aria-hidden="true"><path d="M33 33 L' + polar(from) + ' A' + R + ' ' + R + ' 0 ' + large + ' 1 ' + polar(to) + ' Z" fill="currentColor" fill-opacity="0.16" stroke="currentColor" stroke-opacity="0.55" stroke-width="1.2"></path></svg>';
+      }
+      function windBarbSvg(dir, speedKt) {
+        if (Math.round(speedKt) < 3) {
+          return '<svg class="wind-barb" viewBox="0 0 66 66" aria-hidden="true"><circle cx="33" cy="33" r="6.5" fill="none" stroke="currentColor" stroke-width="2"></circle></svg>';
+        }
+        const speed = Math.round(speedKt / 5) * 5;
+        const pennants = Math.floor(speed / 50);
+        const rem = speed - pennants * 50;
+        const full = Math.floor(rem / 10);
+        const half = Math.floor((rem % 10) / 5);
+        const top = 8, barbDx = 12, barbDy = -6, step = 5;
+        const shapes = ['<line x1="33" y1="33" x2="33" y2="' + top + '"></line>'];
+        let y = top;
+        for (let i = 0; i < pennants; i++) {
+          shapes.push('<polygon points="33,' + y + ' 33,' + (y + 9) + ' ' + (33 + barbDx) + ',' + y + '" fill="currentColor" stroke="currentColor" stroke-linejoin="round"></polygon>');
+          y += 10;
+        }
+        if (pennants && (full || half)) y += 1.5;
+        for (let i = 0; i < full; i++) {
+          shapes.push('<line x1="33" y1="' + y + '" x2="' + (33 + barbDx) + '" y2="' + (y + barbDy) + '"></line>');
+          y += step;
+        }
+        if (half) {
+          if (full === 0 && pennants === 0) y += step;
+          shapes.push('<line x1="33" y1="' + y + '" x2="' + (33 + barbDx / 2) + '" y2="' + (y + barbDy / 2) + '"></line>');
+        }
+        return '<svg class="wind-barb" viewBox="0 0 66 66" aria-hidden="true"><g transform="rotate(' + Math.round(dir) + ' 33 33)" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">' + shapes.join("") + '</g></svg>';
       }
       function esc(value) {
         return String(value).replace(/[&<>"']/g, (char) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[char]));
